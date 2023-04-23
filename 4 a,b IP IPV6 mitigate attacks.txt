@@ -1,0 +1,440 @@
+PART 1:
+R(On all routers)
+enable secret enpa55
+
+line console 0
+password conpa55
+login
+
+ip domain-name ccnasecurity.com
+username admin secret adminpa55
+line vty 0 4
+login local
+crypto key generate rsa
+
+R2:
+int loopback 0
+ip address 192.168.2.1 255.255.255.0
+no shut
+
+R1:
+ip route 192.168.3.0 255.255.255.0 10.1.1.2
+ip route 10.2.2.0 255.255.255.252 10.1.1.2
+ip route 192.168.2.0 255.255.255.0 10.1.1.2
+
+R2:
+ip route 192.168.1.0 255.255.255.0 10.1.1.1
+ip route 192.168.3.0 255.255.255.0 10.2.2.1
+
+R3:
+ip route 192.168.1.0 255.255.255.0 10.2.2.2
+ip route 192.168.2.0 255.255.255.0 10.2.2.2
+ip route 10.1.1.0 255.255.255.252 10.2.2.2
+
+PCA ping 192.168.3.3
+PCA ping 192.168.2.1
+(successful)
+PCA ssh-l admin 192.168.2.1
+adminpa55
+R2>exit
+
+PCC ping 192.168.1.3
+PCC ping 192.168.2.1
+(successful)
+PCC ssh-l admin 192.168.2.1
+adminpa55
+R2>exit
+
+web browser:
+192.168.1.3
+(successful)
+
+PART 2:
+R(On all routers)
+access-list 10 permit host 192.168.3.3
+
+line vty 0 4
+access-class 10 in
+
+PCC> ssh-l admin 192.168.2.1
+adminpa55
+R2>exit
+
+PCA> ssh-l admin 192.168.2.1
+(unsuccessful)
+
+PART 3:
+PCA-Services-HTTP-Disable and HTTP-Enable
+
+R1(config)
+access-list 120 permit udp any host 192.168.1.3 eqdomain
+access-list 120 permit tcp any host 192.168.1.3 eqsmtp
+access-list 120 permit tcp any host 192.168.1.3 eqftp
+access-list 120 deny tcp any host 192.168.1.3 eq443
+access-list 120 permit tcp host 192.168.3.3 host 10.1.1.1 eq22
+
+R1(config)
+int se0/0/0
+ip access-group 120 in
+
+web browser 
+192.168.1.3
+(unsuccessful)
+
+PART 3:
+
+PCA ping 192.168.2.1
+(unsuccessful)
+
+R1(config)
+access-list 120 permit icmp any any echo-reply
+access-list 120 permit icmp any any unreachable
+access-list 120 deny icmp any any
+access-list 120 permit ip
+
+PCA ping 192.168.2.1
+(successful)
+
+PART 5:
+
+R3(config)
+access-list 110 permit ip 192.168.3.0 0.0.0.255 any
+
+int gig0/1
+ip access-group 110 in
+
+PART 6:
+
+R3(config)
+access-list 100 permit tcp 10.0.0.0 0.255.255.255 host 192.168.3.3 eq22
+access-list 100 deny ip 10.0.0.0 0.255.255.255 any
+access-list 100 deny ip 172.16.0.0 0.15.255.255 any
+access-list 100 deny ip 192.168.0.0 0.255.255.255 any 
+access-list 100 deny ip 127.0.0.0 0.255.255.255 any 
+access-list 100 deny ip 224.0.0.0 0.255.255.255 
+access-list 100 permit ip any any
+
+int se0/1/0
+ip access-group 100 in
+
+PCC ping 192.168.1.3
+(unsuccessful)
+PCC ssh-l admin 192.168.2.1
+R2>exit
+
+4(b)Topology:
+IPV6:
+
+R(On all routers):
+enable secret enpa55
+
+R1(config)
+int gig0/0
+ipv6 address 2001:DB8:1:10::1/64
+ipv6 address FE80::1 link-local
+no shut
+
+R1:
+int gig0/1
+ipv6 address 2001:DB8:1:11::1/64
+ipv6 address FE80::1 link-local
+no shut
+
+R1:
+int se0/1/0
+ipv6 address 2001:DB8:1:1::1/64
+ipv6 address FE80::1 link-local
+no shut
+
+R2:
+int se0/1/0
+ipv6 address 2001:DB8:1:1::2/64
+ipv6 address FE80::2 link-local
+no shut
+
+R2:
+int se0/1/1
+ipv6 address 2001:DB8:1:2::2/64
+ipv6 address FE80::2 link-local
+no shut
+
+R3:
+int gig0/0
+ipv6 address 2001:DB8:1:30::1/64
+ipv6 address FE80::3 link-local
+no shut
+
+R3:
+int se0/1/0
+ipv6 address 2001:DB8:1:2::1/64
+ipv6 address FE80::3 link-local
+no shut
+
+R1:
+ipv6 unicast-routing
+ipv6 route 2001:DB8:1:2::0/64 2001:DB8:1:1::2
+ipv6 route 2001:DB8:1:30::0/64 2001:DB8:1:1::2
+
+R2:
+ipv6 unicast-routing
+ipv6 route 2001:DB8:1:10::0/64 2001:DB8:1:1::1
+ipv6 route 2001:DB8:1:11::0/64 2001:DB8:1:1::1
+ipv6 route 2001:DB8:1:1::0/64 2001:DB8:1:2::1
+
+R3:
+ipv6 unicast-routing
+ipv6 route 2001:DB8:1:10::0/64 2001:DB8:1:2::2
+ipv6 route 2001:DB8:1:11::0/64 2001:DB8:1:2::2
+ipv6 route 2001:DB8:1:1::0/64 2001:DB8:1:2::2
+
+PC1 ping 2001:DB8:1:30::30
+PC2 ping 2001:DB8:1:30::30
+(successful)
+
+PART 2:
+
+R1(config):
+ipv6 access-list BLOCK_HTTP
+deny tcp any host 2001:DB8:1:30::30 eqwww
+deny tcp any host 2001:DB8:1:30::30 eq443
+permit ipv6 any any
+exit
+
+int gig0/1
+ipv6 traffic-filter BLOCK_HTTP in
+
+web browser:
+PC1
+http://2001:DB8:1:30::30
+https://2001:DB8:1:30::30
+(successful)
+
+PC2
+http://2001:DB8:1:30::30(unsuccessful)
+https://2001:DB8:1:30::30
+PC2> ping 2001:DB8:1:30::30
+
+PART 3:
+
+R3(config):
+ipv6 access-list BLOCK_ICMP
+deny icmp any any
+permit ipv6 any any
+exit
+
+int gig0/0
+ipv6 traffic-filter BLOCK_ICMP out
+
+PC1 ping 2001:DB8:1:30::30
+unsuccessful
+PC2 ping 2001:DB8:1:30::30
+unsuccessful
+
+web browser:
+http://2001:DB8:1:30::30
+https://2001:DB8:1:30::30
+successful
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

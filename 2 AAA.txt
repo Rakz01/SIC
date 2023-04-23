@@ -1,0 +1,74 @@
+PART 1
+
+R1(config)
+line vty04
+password vtypa55
+login
+
+R1(config)
+enable secret enpa55
+
+R1(config)
+router ospf 1
+network 192.168.1.0  0.0.0.255 area 0
+
+R1(config)
+router ospf 1
+area 0 authentication message-digest
+
+R1(config)
+int gig 0/0
+ip ospf message-digest-key 1 md5md5pa55
+
+R1#
+show ip ospf interface
+(message-digest Authentication Enabled
+Youngest key ID is 1)
+
+end-to-end connectivity
+PCO>ping 192.168.1.1
+PC1>ping 192.168.1.1
+(both successful)
+
+PART 2
+
+R1(config)
+username admin secret adminpa55
+
+R1(config)
+aaa new-model
+aaa authentication logic default local
+
+R1(config)
+line console 0
+login authentication default
+
+R1(config-line)end
+R1#exit
+
+user access verification
+username : admin
+Password : adminpa55
+R1>
+
+PART 3
+
+R1(config)
+ip domain-nameccnasecurity.com
+cryto key generate rsa
+
+R1(config)
+aaa authentication login SSH-LOGIN local
+
+R1(config)
+line vty 04
+login authentication SSH-LOGIN
+transport input ssh
+end
+
+PC0>ssh-l admin 192.168.1.1
+password:adminpa55
+R1>
+PC1>ssh-l admin 192.168.1.1
+password:adminpa55
+R1>

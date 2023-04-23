@@ -1,0 +1,69 @@
+PART 1
+
+R1/SW(On all router and switches)
+enable secret enpa55
+
+line console 0
+password conpa55
+login
+
+ip domain-name ccnasecurity.com
+username admin secret adminpa55
+line vty 0 4
+login local
+crypto key generate rsa
+
+PART 2
+
+SW#
+show spanning-tree
+
+Central(config)
+spanning-tree vlan 1 root primary
+show spanning-tree
+
+SW1(config)
+spanning-tree vlan 1 root secondary
+SW#
+show spanning-tree
+
+SWA/B(config)
+int range fa0/1-4
+spanning-tree portfast
+
+SWA/B(config)
+int range fa0/1-4
+spanning-tree bpduguard enable
+
+SW1/2#
+show spanning-tree
+SW1/2(config)
+int range fa0/23-24
+spanning-tree guard root
+
+
+SWA/B(config)
+int range fa0/1-22
+switchport mode access
+switchport port-security
+switchport port-security maximum 2
+switchport port-security violation shutdown
+switchport port-security mac-address sticky
+
+SWA/B#
+show port-security int fa0/1
+
+SWA/B(config)
+int range fa0/5-22
+shutdown
+
+VERIFY
+C1 > ping 10.1.1.11
+C1 > ping 10.1.1.14
+(successful)
+
+
+SWA/B#
+show port-security int fa0/1
+
+

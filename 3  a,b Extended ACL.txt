@@ -1,0 +1,218 @@
+PART 1:
+
+R1(config)
+line vty 0 4
+password vtypa55
+login
+
+enable secret enpa55
+
+PART 2:
+R1(config)
+access-list 100 permit tcp 172.22.34.64 0.0.0.31 host 172.22.34.62 eq ftp
+access-list 100 permit icmp 172.22.34.64 0.0.0.31 host 172.22.34.62
+
+R1(config)
+int gig0/0
+ip access-group 100 in
+
+verify:
+PC-1 ping 172.22.34.62
+(successful)
+PC-1 ftp 172.22.34.62
+ftp>quit
+PC-1 ping 172.22.34.98
+
+PART 3:
+R1(config)
+ip access-list extended HTTP_ONLY
+permit tcp 172.22.34.96 0.0.0.15 host 172.22.34.62 eq www
+permit icmp 172.22.34.96 0.0.0.15 host 172.22.34.62
+
+R1(config)
+int gig0/1
+ip access-group HTTP_ONLY in
+
+PC-2>ping 172.22.34.62
+(Successful)
+PC-2>ftp 172.22.34.62
+(unsuccessful)
+In web browser on PC-2
+http://172.22.34.62
+(successful)
+PC-2>ping 172.22.34.62
+(unsuccessful)
+
+(B) Topology:(SWITCH)
+SWA:
+int vlan 1
+ip address 10.101.117.50 255.255.255.248
+no shut
+ip default-gateway 10.101.117.49
+
+SWB:
+int vlan 1
+ip address 10.101.117.34 255.255.255.240
+no shut
+ip default-gateway 10.101.117.33
+
+SWC:
+int vlan 1
+ip address 10.101.117.2 255.255.255.224
+no shut
+ip default-gateway 10.101.117.1
+
+(Both Router&Switch):
+(Config)
+enable secret enpa55
+
+line console 0
+password conpa55
+login
+
+PCA> ping 10.101.117.35
+PCA> ping 10.101.117.2
+PCB> ping 10.101.117.2
+(successful)
+
+PART 2:
+(Both Router&switch):
+ip domain-name ecnasecurity.com
+
+username admin secret adminpa55
+
+line vty 0 4
+login local
+crypto key generate rsa
+
+VERIFY:
+PCA> ssh-l admin 10.101.117.34
+Password:adminpa55
+PCA> ssh-l admin 10.101.117.2
+adminpa55
+PCB> ssh-l admin 10.101.117.2
+adminpa55
+SWC# ssh-l admin 10.101.117.50
+adminpa55
+SWC# ssh-l admin 10.101.117.34
+
+PART 3:
+
+Router:
+access-list 199 permit tcp 10.101.117.32 0.0.0.15 10.101.117.0 0.0.0.31 eq22
+access-list 199 permit icmp any
+
+int gig0/2
+ip access-group 199 out
+
+A:
+PCB> ping 10.101.117.51
+PCB> ping 10.101.117.2
+(successful)
+B:
+PCB> ssh-l admin 10.101.117.2
+adminpa55
+C:
+SWC>exit
+D:
+PCA> ping 10.101.117.35
+PCA> ping 10.101.117.2
+(successful)
+E:
+PCA> ssh-l admin 10.101.117.2
+(unsuccessful)
+F:
+PCA> ssh-l admin 10.101.117.34
+adminpa55
+G:
+SWB# ssh-l admin 10.101.117.2
+adminpa55
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
